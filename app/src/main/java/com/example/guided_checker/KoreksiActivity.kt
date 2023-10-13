@@ -1,9 +1,9 @@
 package com.example.guided_checker
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.guided_checker.data.remote.model.MahasiswaWithStatus
@@ -19,6 +19,7 @@ class KoreksiActivity : AppCompatActivity() {
     private lateinit var binding: ActivityKoreksiBinding
     private lateinit var adapter: MahasiswaAdapter
     private var searchQuery: String = ""
+    private var listMahasiswa: List<MahasiswaWithStatus> = listOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,7 +28,7 @@ class KoreksiActivity : AppCompatActivity() {
 
         kelas = intent.getStringExtra("kelas").toString()
         modul = intent.getStringExtra("modul").toString()
-        supportActionBar?.title = "Koreksi $kelas $modul"
+        supportActionBar?.title = "Koreksi Kelas $kelas - Modul $modul"
         initRecycleView()
         getDataMahasiswa()
 
@@ -37,11 +38,11 @@ class KoreksiActivity : AppCompatActivity() {
 
         binding.search.editText?.addTextChangedListener {
             searchQuery = it.toString().lowercase()
-            getDataMahasiswa()
+            updateListMahasiswa()
         }
     }
 
-    fun getDataMahasiswa(){
+    private fun getDataMahasiswa(){
         binding.refreshLayout.isRefreshing = true
         CoroutineScope(Dispatchers.IO).launch(Dispatchers.Main) {
 //            val textOutputElement = binding.helloWorldElement // only the original thread that created a view hierarchy can touch its views
@@ -49,10 +50,8 @@ class KoreksiActivity : AppCompatActivity() {
                 Log.e("MainActivity", "Before Response")
                 val response = ApiConfig.getApiService().getMahasiswa(kelas, modul)
                 Log.e("MainActivity", response.toString())
-                val data = response.data.filter {
-                    it.npm.contains(searchQuery) || it.nama.lowercase().contains(searchQuery)
-                }
-                adapter.setData(data)
+                listMahasiswa = response.data
+                updateListMahasiswa()
                 binding.refreshLayout.isRefreshing = false
             } catch (e: Exception) {
                 binding.refreshLayout.isRefreshing = false
@@ -60,23 +59,34 @@ class KoreksiActivity : AppCompatActivity() {
         }
     }
 
-    fun initRecycleView(){
+    private fun updateListMahasiswa(){
+        adapter.setData(listMahasiswa.filter {
+            it.npm.contains(searchQuery) || it.nama.lowercase().contains(searchQuery)
+        })
+    }
+
+    private fun initRecycleView(){
         adapter = MahasiswaAdapter(object :MahasiswaAdapter.ClickInterface{
             override fun onClickItem(data: MahasiswaWithStatus){
                 if (data.status != null) {
-                    Toast.makeText(this@KoreksiActivity, "Sudah dikoreksi", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@KoreksiActivity, "${data.npm} sudah dikoreksi.", Toast.LENGTH_SHORT).show()
                     return
                 }
                 CoroutineScope(Dispatchers.IO).launch(Dispatchers.Main) {
+                    // set loading = true agar user tau kalau sedang loading
+                    binding.refreshLayout.isRefreshing = true
                     try {
                         ApiConfig.getApiService().addStatus(data.npm, modul, "1")
                         // reset search query
                         searchQuery = ""
                         binding.search.editText?.setText("")
-
-                        getDataMahasiswa()
+                        Toast.makeText(this@KoreksiActivity, "${data.npm} berhasil dikoreksi.", Toast.LENGTH_SHORT).show()
                     } catch (e: Exception) {
-//                textOutputElement.text = e.message
+                        Toast.makeText(this@KoreksiActivity, "Gagal mengoreksi ${data.npm}.", Toast.LENGTH_SHORT).show()
+                    } finally {
+                        // refresh data entah berhasil atau tidak
+                        // loading di-hide di getDataMahasiswa()
+                        getDataMahasiswa()
                     }
                 }
             }
