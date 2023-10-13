@@ -1,5 +1,6 @@
 package com.example.guided_checker
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
@@ -17,21 +18,16 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        CoroutineScope(Dispatchers.IO).launch(Dispatchers.Main) {
-            val textOutputElement = binding.helloWorldElement // only the original thread that created a view hierarchy can touch its views
-            try {
-                Log.e("MainActivity", "Before Response")
-                val response = ApiConfig.getApiService().getMahasiswa("A", "1")
-                Log.e("MainActivity", response.toString())
-                val data = response.data
-                var textOutput = ""
-                for (mahasiswa in data) {
-                    textOutput += "${mahasiswa.nama} - ${if(mahasiswa.status?.status == "1") "Sudah" else "Belum"}\n"
-                }
-                textOutputElement.text = textOutput
-            } catch (e: Exception) {
-                textOutputElement.text = e.message
-            }
+        binding.button.setOnClickListener{
+            val kelas = binding.listKelas.selectedItem.toString()
+            val modul = binding.listModul.selectedItem.toString()
+
+            val intent = Intent(this, Koreksi::class.java)
+            intent.putExtra("kelas", kelas)
+            intent.putExtra("modul", modul)
+            startActivity(intent)
         }
+
+
     }
 }

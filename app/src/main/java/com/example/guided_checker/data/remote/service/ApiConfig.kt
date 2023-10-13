@@ -18,7 +18,7 @@ object ApiConfig {
 
     fun getApiService(): ApiService {
         val retrofit = Retrofit.Builder()
-            .baseUrl("http://192.168.18.184/Guided_Checker/public/api/") // BASE URL HERE --> 'localhost'/'127.0.0.1' diganti dengan IP Address laptop
+            .baseUrl("https://backend-raka.danielriq221.com/public/api/") // BASE URL HERE --> 'localhost'/'127.0.0.1' diganti dengan IP Address laptop
             .addConverterFactory(GsonConverterFactory.create())
             .client(client)
             .build()
