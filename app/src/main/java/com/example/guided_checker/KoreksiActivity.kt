@@ -13,7 +13,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class Koreksi : AppCompatActivity() {
+class KoreksiActivity : AppCompatActivity() {
     private lateinit var kelas: String
     private lateinit var modul: String
     private lateinit var binding: ActivityKoreksiBinding
@@ -64,7 +64,7 @@ class Koreksi : AppCompatActivity() {
         adapter = MahasiswaAdapter(object :MahasiswaAdapter.ClickInterface{
             override fun onClickItem(data: MahasiswaWithStatus){
                 if (data.status != null) {
-                    Toast.makeText(this@Koreksi, "Sudah dikoreksi", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@KoreksiActivity, "Sudah dikoreksi", Toast.LENGTH_SHORT).show()
                     return
                 }
                 CoroutineScope(Dispatchers.IO).launch(Dispatchers.Main) {
