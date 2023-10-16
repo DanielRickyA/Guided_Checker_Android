@@ -3,6 +3,7 @@ package com.example.guided_checker
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -83,7 +84,31 @@ class KoreksiActivity : AppCompatActivity() {
         adapter = MahasiswaAdapter(object :MahasiswaAdapter.ClickInterface{
             override fun onClickItem(data: MahasiswaWithStatus){
                 if (data.status != null) {
-                    Toast.makeText(this@KoreksiActivity, "${data.npm} sudah dikoreksi.", Toast.LENGTH_SHORT).show()
+                    val id = data.status.id
+                    AlertDialog.Builder(this@KoreksiActivity)
+                        .setTitle("Konfirmasi")
+                        .setMessage("Apakah anda yakin ingin menghapus status presensi ${data.npm}?")
+                        .setPositiveButton("Ya") { _, _ ->
+                            CoroutineScope(Dispatchers.IO).launch(Dispatchers.Main) {
+                                // set loading = true agar user tau kalau sedang loading
+                                binding.refreshLayout.isRefreshing = true
+                                try {
+                                    ApiConfig.getApiService().deleteStatus(id)
+                                    // reset search query
+                                    searchQuery = ""
+                                    binding.search.editText?.setText("")
+                                    Toast.makeText(this@KoreksiActivity, "${data.npm} berhasil dihapus.", Toast.LENGTH_SHORT).show()
+                                } catch (e: Exception) {
+                                    Toast.makeText(this@KoreksiActivity, "Gagal menghapus ${data.npm}.", Toast.LENGTH_SHORT).show()
+                                } finally {
+                                    // refresh data entah berhasil atau tidak
+                                    // loading di-hide di getDataMahasiswa()
+                                    getDataMahasiswa()
+                                }
+                            }
+                        }
+                        .setNegativeButton("Tidak", null)
+                        .show()
                     return
                 }
                 CoroutineScope(Dispatchers.IO).launch(Dispatchers.Main) {

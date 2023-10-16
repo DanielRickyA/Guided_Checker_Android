@@ -3,6 +3,7 @@ package com.example.guided_checker.data.remote.api
 import com.example.guided_checker.data.remote.model.ApiResponse
 import com.example.guided_checker.data.remote.model.MahasiswaWithStatus
 import com.example.guided_checker.data.remote.model.StatusPresensi
+import retrofit2.http.DELETE
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
@@ -22,5 +23,10 @@ interface ApiService {
         @Field("id_mahasiswa") idMahasiswa: String,
         @Field("modul") modul: String,
         @Field("status") status: String = "1"
+    ): ApiResponse<StatusPresensi>
+
+    @DELETE("status/{id}")
+    suspend fun deleteStatus(
+        @Path("id") id: Int
     ): ApiResponse<StatusPresensi>
 }
