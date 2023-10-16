@@ -18,8 +18,9 @@ class KoreksiActivity : AppCompatActivity() {
     private lateinit var modul: String
     private lateinit var binding: ActivityKoreksiBinding
     private lateinit var adapter: MahasiswaAdapter
-    private var searchQuery: String = ""
+    private var searchQuery = ""
     private var listMahasiswa: List<MahasiswaWithStatus> = listOf()
+    private var showNullStatus = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,9 +29,11 @@ class KoreksiActivity : AppCompatActivity() {
 
         kelas = intent.getStringExtra("kelas").toString()
         modul = intent.getStringExtra("modul").toString()
-        supportActionBar?.title = "Koreksi Kelas $kelas - Modul $modul"
+        supportActionBar?.hide()
         initRecycleView()
         getDataMahasiswa()
+
+        binding.tvKelasModul.text = "Kelas $kelas - Modul $modul"
 
         binding.refreshLayout.setOnRefreshListener {
             getDataMahasiswa()
@@ -38,6 +41,11 @@ class KoreksiActivity : AppCompatActivity() {
 
         binding.search.editText?.addTextChangedListener {
             searchQuery = it.toString().lowercase()
+            updateListMahasiswa()
+        }
+
+        binding.swFilter.setOnCheckedChangeListener { _, isChecked ->
+            showNullStatus = isChecked
             updateListMahasiswa()
         }
     }
@@ -60,9 +68,15 @@ class KoreksiActivity : AppCompatActivity() {
     }
 
     private fun updateListMahasiswa(){
-        adapter.setData(listMahasiswa.filter {
+        var list = listMahasiswa.filter {
             it.npm.contains(searchQuery) || it.nama.lowercase().contains(searchQuery)
-        })
+        }
+        if (showNullStatus) {
+            list = list.filter {
+                it.status == null
+            }
+        }
+        adapter.setData(list)
     }
 
     private fun initRecycleView(){
